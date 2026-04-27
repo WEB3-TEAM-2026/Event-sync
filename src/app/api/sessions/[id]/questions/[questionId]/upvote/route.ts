@@ -1,10 +1,10 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ok, notFound, serverError } from "@/lib/api-response";
+import { ok, notFound, serverError } from "@/lib/response";
 
 type Params = { params: { id: string; questionId: string } };
 
-// POST /api/sessions/[id]/questions/[questionId]/upvote — public
+// POST questions/[questionId]/upvote
 export async function POST(_req: NextRequest, { params }: Params) {
   try {
     const question = await prisma.question.findUnique({
