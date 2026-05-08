@@ -1,114 +1,192 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import type { Event, Room, Session, SessionSpeaker, Speaker as PrismaSpeaker } from "@prisma/client";
+import { requireOrganizer, isNextResponse } from "@/lib/auth/requireOrganizer";
 
-type SpeakerWithSessions = PrismaSpeaker & {
-  sessions?: Array<
-    SessionSpeaker & {
-      session: Session & {
-        event: Event;
-        room: Room;
-      };
-    }
-  >;
-};
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/**
- * GET /api/speakers
- */
-export async function GET(request: Request) {
+async function assertSessionExists(
+  sessionId: string
+): Promise<NextResponse | null> {
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId },
+    select: { id: true },
+  });
+  if (!session) {
+    return NextResponse.json(
+      { success: false, error: "Session non trouvée" },
+      { status: 404 }
+    );
+  }
+  return null;
+}
+
+async function assertSpeakerExists(
+  speakerId: string
+): Promise<NextResponse | null> {
+  const speaker = await prisma.speaker.findUnique({
+    where: { id: speakerId },
+    select: { id: true },
+  });
+  if (!speaker) {
+    return NextResponse.json(
+      { success: false, error: "Intervenant non trouvé" },
+      { status: 404 }
+    );
+  }
+  return null;
+}
+
+// ─── GET /api/sessions/[id]/speakers ─────────────────────────────────────────
+
+
+export async function GET(
+  _request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
-    const { searchParams } = new URL(request.url);
-    const includesSessions = searchParams.get("includeSessions") === "true";
+    const notFound = await assertSessionExists(params.id);
+    if (notFound) return notFound;
 
-    const speakers = await prisma.speaker.findMany({
-      orderBy: {
-        fullName: "asc",
+    const links = await prisma.sessionSpeaker.findMany({
+      where: { sessionId: params.id },
+      include: {
+        speaker: true,
       },
-      include: includesSessions ? {
-        sessions: {
-          include: {
-            session: {
-              include: {
-                event: true,
-                room: true,
-              },
-            },
-          },
-        },
-      } : undefined,
-    }) as SpeakerWithSessions[];
-
-    const transformedSpeakers = speakers.map((speaker) => {
-      if (!includesSessions) {
-        return speaker;
-      }
-
-      return {
-        ...speaker,
-        sessions: speaker.sessions?.map((ss) => ss.session) || [],
-      };
+      orderBy: {
+        speaker: { fullName: "asc" },
+      },
     });
+
+    const speakers = links.map((l) => l.speaker);
 
     return NextResponse.json({
       success: true,
-      data: transformedSpeakers,
+      data: speakers,
       count: speakers.length,
     });
   } catch (error) {
-    console.error("Error fetching speakers:", error);
+    console.error("[GET /api/sessions/:id/speakers]", error);
     return NextResponse.json(
-      {
-        success: false,
-        error: "Erreur lors de la récupération des intervenants",
-      },
+      { success: false, error: "Erreur serveur" },
       { status: 500 }
     );
   }
 }
 
-/**
- * POST /api/speakers
- */
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const { fullName, profilePhoto, bio, externalLinks } = body;
+// ─── POST /api/sessions/[id]/speakers ────────────────────────────────────────
 
-    if (!fullName || !bio) {
+
+export async function POST(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const auth = await requireOrganizer(request);
+  if (isNextResponse(auth)) return auth;
+
+  try {
+    let body: { speakerId?: string };
+    try {
+      body = await request.json();
+    } catch {
       return NextResponse.json(
-        {
-          success: false,
-          error: "Le nom complet et la biographie sont requis",
-        },
+        { success: false, error: "Corps de requête JSON invalide" },
         { status: 400 }
       );
     }
 
-    const speaker = await prisma.speaker.create({
-      data: {
-        fullName,
-        profilePhoto: profilePhoto || null,
-        bio,
-        externalLinks: externalLinks || null,
+    const { speakerId } = body;
+    if (!speakerId || typeof speakerId !== "string") {
+      return NextResponse.json(
+        { success: false, error: "speakerId est requis" },
+        { status: 400 }
+      );
+    }
+
+    const sessionNotFound = await assertSessionExists(params.id);
+    if (sessionNotFound) return sessionNotFound;
+
+    const speakerNotFound = await assertSpeakerExists(speakerId);
+    if (speakerNotFound) return speakerNotFound;
+
+    const link = await prisma.sessionSpeaker.upsert({
+      where: {
+        sessionId_speakerId: {   
+          sessionId: params.id,
+          speakerId,
+        },
       },
+      update: {},                
+      create: {
+        sessionId: params.id,
+        speakerId,
+      },
+      include: { speaker: true },
     });
 
     return NextResponse.json(
       {
         success: true,
-        data: speaker,
-        message: "Intervenant créé avec succès",
+        data: link.speaker,
+        message: "Intervenant attaché à la session",
       },
-      { status: 201 }
+      { status: 200 }            
     );
   } catch (error) {
-    console.error("Error creating speaker:", error);
+    console.error("[POST /api/sessions/:id/speakers]", error);
     return NextResponse.json(
-      {
-        success: false,
-        error: "Erreur lors de la création de l'intervenant",
+      { success: false, error: "Erreur serveur" },
+      { status: 500 }
+    );
+  }
+}
+
+// ─── DELETE /api/sessions/[id]/speakers ──────────────────────────────────────
+
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const auth = await requireOrganizer(request);
+  if (isNextResponse(auth)) return auth;
+
+  try {
+    let body: { speakerId?: string };
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, error: "Corps de requête JSON invalide" },
+        { status: 400 }
+      );
+    }
+
+    const { speakerId } = body;
+    if (!speakerId || typeof speakerId !== "string") {
+      return NextResponse.json(
+        { success: false, error: "speakerId est requis" },
+        { status: 400 }
+      );
+    }
+
+    const sessionNotFound = await assertSessionExists(params.id);
+    if (sessionNotFound) return sessionNotFound;
+
+    await prisma.sessionSpeaker.deleteMany({
+      where: {
+        sessionId: params.id,
+        speakerId,
       },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "Intervenant détaché de la session",
+    });
+  } catch (error) {
+    console.error("[DELETE /api/sessions/:id/speakers]", error);
+    return NextResponse.json(
+      { success: false, error: "Erreur serveur" },
       { status: 500 }
     );
   }

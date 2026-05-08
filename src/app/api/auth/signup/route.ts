@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createOrganizer } from "@/lib/create-user";
+import { createOrganizer } from "@/lib/auth/create-user";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
