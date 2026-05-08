@@ -5,7 +5,7 @@ import { request } from "https";
 export async function GET(){
     try {
         const sessions = await prisma.session.findMany();
-        return NextResponse.json(sessions);
+        return NextResponse.json(sessions, { status: 200 });
     } catch (error) {
         return NextResponse.json({ error: "Failed to fetch sessions" }, { status: 500 });
     }
