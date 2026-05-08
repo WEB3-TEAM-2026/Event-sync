@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isSessionLive } from "@/lib/utils/date";
 
-// ─── GET /api/sessions — PUBLIC ───────────────────────────────────────────────
+//GET /api/sessions PUBLIC
 
 export async function GET() {
     try {

@@ -9,7 +9,7 @@ import { isSessionLive } from "@/lib/utils/date";
 
 type Params = { params: { id: string } };
 
-// ─── GET /api/events/[id] — PUBLIC ───────────────────────────────────────────
+//GET /api/events/[id] PUBLIC
 
 export async function GET(_req: NextRequest, { params }: Params) {
     try {
@@ -53,7 +53,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
     }
 }
 
-// ─── PUT /api/events/[id] — ORGANISATEUR + OWNERSHIP ────────────────────────
+//PUT /api/events/[id] ORGANISATEUR + OWNERSHIP
 
 export async function PUT(request: NextRequest, { params }: Params) {
     const auth = await requireOrganizer(request);
@@ -132,7 +132,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
     }
 }
 
-// ─── DELETE /api/events/[id] — ORGANISATEUR + OWNERSHIP ─────────────────────
+//DELETE /api/events/[id] ORGANISATEUR + OWNERSHIP
 
 export async function DELETE(request: NextRequest, { params }: Params) {
     const auth = await requireOrganizer(request);

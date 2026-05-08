@@ -9,7 +9,7 @@ import { isSessionLive } from "@/lib/utils/date";
 
 type Params = { params: { id: string } };
 
-// ─── GET /api/events/[id]/sessions — PUBLIC (filtre roomId optionnel) ─────────
+//GET /api/events/[id]/sessions 
 
 export async function GET(request: NextRequest, { params }: Params) {
     try {
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest, { params }: Params) {
     }
 }
 
-// ─── POST /api/events/[id]/sessions — ORGANISATEUR + OWNERSHIP ───────────────
+//POST /api/events/[id]/sessions
 
 export async function POST(request: NextRequest, { params }: Params) {
     const auth = await requireOrganizer(request);

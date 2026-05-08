@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireOrganizer, isNextResponse } from "@/lib/auth/requireOrganizer";
 import { isSessionLive } from "@/lib/utils/date";
 
-// ─── GET /api/events — PUBLIC ─────────────────────────────────────────────────
+//GET /api/events PUBLIC
 
 export async function GET() {
     try {
@@ -42,7 +42,7 @@ export async function GET() {
     }
 }
 
-// ─── POST /api/events — ORGANISATEUR ─────────────────────────────────────────
+//POST /api/events ORGANISATEUR
 
 export async function POST(request: NextRequest) {
     const auth = await requireOrganizer(request);
