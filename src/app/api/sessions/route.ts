@@ -1,27 +1,34 @@
 import { NextResponse } from "next/server";
-import { prisma } from '@/lib/prisma';
-import { request } from "https";
+import { prisma } from "@/lib/prisma";
+import { isSessionLive } from "@/lib/utils/date";
 
-export async function GET(){
-    try {
-        const sessions = await prisma.session.findMany();
-        return NextResponse.json(sessions);
-    } catch (error) {
-        return NextResponse.json({ error: "Failed to fetch sessions" }, { status: 500 });
-    }
-}
+// ─── GET /api/sessions — PUBLIC ───────────────────────────────────────────────
 
-export async function POST(req: Request) {
+export async function GET() {
     try {
-        const body = await req.json();
-        const newSession = await prisma.session.create({
-            data: {
-                name: body.name,
-                description: body.description,
+        const sessions = await prisma.session.findMany({
+            include: {
+                room: true,
+                event: true,
+                speakers: {
+                    include: { speaker: true },
+                },
             },
+            orderBy: { startTime: "asc" },
         });
-        return NextResponse.json(newSession, { status: 201 });
+
+        const sessionsWithLive = sessions.map((session) => ({
+            ...session,
+            isLive: isSessionLive(session.startTime, session.endTime),
+            speakers: session.speakers.map((ss) => ss.speaker),
+        }));
+
+        return NextResponse.json({ success: true, data: sessionsWithLive });
     } catch (error) {
-        return NextResponse.json({ error: "Failed to create session" }, { status: 500 });
+        console.error("[GET /api/sessions]", error);
+        return NextResponse.json(
+            { success: false, error: "Erreur serveur." },
+            { status: 500 },
+        );
     }
 }
