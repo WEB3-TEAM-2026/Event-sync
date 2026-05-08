@@ -17,10 +17,10 @@ export async function GET() {
             orderBy: { startTime: "asc" },
         });
 
-        const sessionsWithLive = sessions.map((session) => ({
+        const sessionsWithLive = sessions.map((session: (typeof sessions)[number]) => ({
             ...session,
             isLive: isSessionLive(session.startTime, session.endTime),
-            speakers: session.speakers.map((ss) => ss.speaker),
+            speakers: session.speakers.map((ss: (typeof session.speakers)[number]) => ss.speaker),
         }));
 
         return NextResponse.json({ success: true, data: sessionsWithLive });

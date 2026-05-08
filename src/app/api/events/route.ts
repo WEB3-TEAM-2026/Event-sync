@@ -23,12 +23,12 @@ export async function GET() {
             orderBy: { startDate: "asc" },
         });
 
-        const eventsWithLive = events.map((event) => ({
+        const eventsWithLive = events.map((event: (typeof events)[number]) => ({
             ...event,
-            sessions: event.sessions.map((session) => ({
+            sessions: event.sessions.map((session: (typeof event.sessions)[number]) => ({
                 ...session,
                 isLive: isSessionLive(session.startTime, session.endTime),
-                speakers: session.speakers.map((ss) => ss.speaker),
+                speakers: session.speakers.map((ss: (typeof session.speakers)[number]) => ss.speaker),
             })),
         }));
 

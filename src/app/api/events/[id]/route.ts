@@ -36,10 +36,10 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
         const event = {
             ...raw,
-            sessions: raw.sessions.map((session) => ({
+            sessions: raw.sessions.map((session: (typeof raw.sessions)[number]) => ({
                 ...session,
                 isLive: isSessionLive(session.startTime, session.endTime),
-                speakers: session.speakers.map((ss) => ss.speaker),
+                speakers: session.speakers.map((ss: (typeof session.speakers)[number]) => ss.speaker),
             })),
         };
 
