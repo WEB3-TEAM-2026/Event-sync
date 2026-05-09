@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from '@/lib/prisma';
 import { requireOrganizer } from '@/lib/auth/requireOrganizer';
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, context: { params: { id: string } }) {
     try {
+        const { id } = context.params;
+
         const session = await prisma.session.findUnique({
-            where: { id: params.id },
+            where: { id },
             include: {
                 room: true,
                 event: true,
@@ -31,7 +33,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     try {
         const authResult = await requireOrganizer(req);
         if ('status' in authResult) {
-            return authResult; // Unauthorized or forbidden response
+            return authResult;
         }
 
         const { user } = authResult;
@@ -64,7 +66,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     try {
         const authResult = await requireOrganizer(req);
         if ('status' in authResult) {
-            return authResult; // Unauthorized or forbidden response
+            return authResult;
         }
 
         const { user } = authResult;
