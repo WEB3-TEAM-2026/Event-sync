@@ -13,7 +13,6 @@ export const isSessionLive = (
          (isBefore(now, end) || now.getTime() === end.getTime());
 };
 
-
 export const formatTime = (date: Date | string): string => {
   const d = typeof date === 'string' ? parseISO(date) : date;
   return d.toLocaleTimeString('fr-FR', { 
@@ -21,3 +20,8 @@ export const formatTime = (date: Date | string): string => {
     minute: '2-digit' 
   });
 };
+
+export function isLive(startTime: Date, endTime: Date): boolean {
+    const now = new Date();
+    return now >= startTime && now <= endTime;
+}
