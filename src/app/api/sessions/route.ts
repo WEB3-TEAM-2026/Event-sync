@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { prisma } from '@/lib/prisma';
-import { request } from "https";
-import { requireOrganizer } from '@/lib/auth/requireOrganizer';
+import { prisma } from "@/lib/prisma";
+import { requireOrganizer } from "@/lib/auth/requireOrganizer";
+import { isSessionLive } from "@/lib/utils/date";
 
+// GET /api/sessions - PUBLIC
 export async function GET() {
     try {
         const sessions = await prisma.session.findMany({
@@ -15,17 +16,30 @@ export async function GET() {
                     },
                 },
             },
+            orderBy: { startTime: "asc" },
         });
-        return NextResponse.json(sessions, { status: 200 });
+
+        const sessionsWithLive = sessions.map((session: any) => ({
+            ...session,
+            isLive: isSessionLive(session.startTime, session.endTime),
+            speakers: session.speakers.map((ss: any) => ss.speaker),
+        }));
+
+        return NextResponse.json({ success: true, data: sessionsWithLive });
     } catch (error) {
-        return NextResponse.json({ error: "Failed to fetch sessions" }, { status: 500 });
+        console.error("[GET /api/sessions]", error);
+        return NextResponse.json(
+            { success: false, error: "Erreur serveur." },
+            { status: 500 }
+        );
     }
 }
 
+// POST /api/sessions - Créer une session (Organizer only)
 export async function POST(req: Request) {
     try {
         const authResult = await requireOrganizer(req);
-        if ('status' in authResult) {
+        if ("status" in authResult) {
             return authResult;
         }
 
@@ -49,6 +63,10 @@ export async function POST(req: Request) {
 
         return NextResponse.json(newSession, { status: 201 });
     } catch (error) {
-        return NextResponse.json({ error: "Failed to create session" }, { status: 500 });
+        console.error("[POST /api/sessions]", error);
+        return NextResponse.json(
+            { error: "Failed to create session" },
+            { status: 500 }
+        );
     }
 }
