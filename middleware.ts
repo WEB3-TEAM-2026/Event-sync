@@ -4,22 +4,22 @@ import { NextResponse } from "next/server";
 export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
-    const isAdminPage = req.nextUrl.pathname.startsWith("/admin");
+    const isDashboardPage = req.nextUrl.pathname.startsWith("/dashboard");
 
-    if (isAdminPage && token?.role !== "ORGANIZER") {
+    if (isDashboardPage && token?.role !== "ORGANIZER") {
       return NextResponse.redirect(new URL("/", req.url));
     }
   },
   {
     callbacks: {
-      authorized: ({ token }) => !!token, 
+      authorized: ({ token }) => !!token,
     },
     pages: {
-      signIn: "/auth/signin", 
+      signIn: "/auth/signin",
     },
   }
 );
 
-export const config = { 
-  matcher: ["/admin/:path*"] 
+export const config = {
+  matcher: ["/dashboard/:path*"],
 };

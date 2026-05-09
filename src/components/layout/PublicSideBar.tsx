@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { 
   Home, 
@@ -14,6 +14,7 @@ import {
   Settings 
 } from "lucide-react";
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/Button";
 
 const navigation = [
@@ -25,7 +26,19 @@ const navigation = [
 
 export const PublicSidebar = () => {
   const pathname = usePathname();
+  const router = useRouter();
+  const { data: session, status } = useSession();
   const [isOpen, setIsOpen] = useState(false);
+
+  function handleOrganizerClick() {
+    setIsOpen(false);
+    if (status === "loading") return;
+    if (session?.user) {
+      router.push("/dashboard");
+    } else {
+      router.push("/auth/signin");
+    }
+  }
 
   return (
     <>
@@ -79,15 +92,15 @@ export const PublicSidebar = () => {
 
           <div className="p-4 space-y-4 border-t border-gray-100">
             
-            <Link href="/admin/dashboard" onClick={() => setIsOpen(false)}>
-              <Button 
-                variant="secondary" 
-                className="w-full justify-start gap-3 bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-700"
-              >
-                <Settings size={18} className="text-gray-500" />
-                Espace Organisateur
-              </Button>
-            </Link>
+            <Button
+              variant="secondary"
+              className="w-full justify-start gap-3 bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-700 disabled:opacity-60"
+              onClick={handleOrganizerClick}
+              disabled={status === "loading"}
+            >
+              <Settings size={18} className="text-gray-500" />
+              {status === "loading" ? "Chargement..." : "Espace Organisateur"}
+            </Button>
 
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
