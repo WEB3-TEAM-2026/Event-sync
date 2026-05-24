@@ -17,8 +17,8 @@ export default function HomePage() {
           <Link href="/events">
             <Button className="h-12 px-8">Voir les événements</Button>
           </Link>
-          <Link href="/about">
-            <Button variant="secondary" className="h-12 px-8">En savoir plus</Button>
+          <Link href="/auth/signin">
+            <Button variant="secondary" className="h-12 px-8">Espace organisateur</Button>
           </Link>
         </div>
       </section>
@@ -31,7 +31,43 @@ export default function HomePage() {
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">Événements</p>
-              <p className="text-2xl font-bold text-gray-900 underline decoration-blue-500">À venir</p>
+              <Link href="/events">
+                <p className="text-2xl font-bold text-gray-900 underline decoration-blue-500 hover:text-blue-600 transition-colors">
+                  À venir
+                </p>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="flex items-center gap-4">
+            <div className="p-3 bg-purple-100 text-purple-600 rounded-lg">
+              <ArrowRight size={24} />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Intervenants</p>
+              <Link href="/speakers">
+                <p className="text-2xl font-bold text-gray-900 underline decoration-purple-500 hover:text-purple-600 transition-colors">
+                  Découvrir
+                </p>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="flex items-center gap-4">
+            <div className="p-3 bg-yellow-100 text-yellow-600 rounded-lg">
+              <Calendar size={24} />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Mes favoris</p>
+              <Link href="/favorites">
+                <p className="text-2xl font-bold text-gray-900 underline decoration-yellow-500 hover:text-yellow-600 transition-colors">
+                  Mon planning
+                </p>
+              </Link>
             </div>
           </CardContent>
         </Card>
