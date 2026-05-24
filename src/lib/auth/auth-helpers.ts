@@ -1,7 +1,6 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { authOptions } from "@/lib/auth/auth";
 import { redirect } from "next/navigation";
-
 
 export async function requireAuth() {
   const session = await getServerSession(authOptions);
@@ -16,7 +15,6 @@ export async function requireAuth() {
 
   return session;
 }
-
 
 export async function getCurrentSession() {
   return await getServerSession(authOptions);
