@@ -1,76 +1,101 @@
 import { Button } from "@/components/ui/Button";
-import { Card, CardContent } from "@/components/ui/Card";
 import Link from "next/link";
-import { Calendar, ArrowRight } from "lucide-react";
+import { Calendar, Users, Star, ArrowRight, Radio } from "lucide-react";
 
 export default function HomePage() {
   return (
-    <div className="space-y-10">
-      <section className="py-12 border-b border-gray-100">
-        <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight sm:text-6xl">
-          Bienvenue sur <span className="text-blue-600">EventSync</span>
+    <div className="space-y-12 animate-fade-in">
+      {/* Hero */}
+      <section className="pt-6 pb-10 border-b border-[var(--border)]">
+        <div className="flex items-center gap-2 mb-5">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--accent-subtle)] text-[var(--accent-text)] border border-[var(--accent)]/20">
+            <Radio size={10} className="animate-pulse" />
+            Plateforme événements en direct
+          </span>
+        </div>
+        <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight text-[var(--text-primary)]">
+          Gérez vos événements<br />
+          <span className="brand-gradient">avec style.</span>
         </h1>
-        <p className="mt-6 text-lg text-gray-600 max-w-2xl">
-          La plateforme centralisée pour suivre vos conférences, poser vos questions en direct et gérer vos sessions préférées.
+        <p className="mt-5 text-[var(--text-secondary)] text-lg max-w-xl leading-relaxed">
+          EventSync remplace les programmes statiques par une interface dynamique — planning en temps réel, Q&A live et favoris personnalisés.
         </p>
-        <div className="mt-10 flex gap-4">
-          <Link href="/events">
-            <Button className="h-12 px-8">Voir les événements</Button>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Link href="/events" className="inline-flex">
+            <Button size="lg" className="gap-2">
+              Voir les événements <ArrowRight size={16} />
+            </Button>
           </Link>
-          <Link href="/auth/signin">
-            <Button variant="secondary" className="h-12 px-8">Espace organisateur</Button>
+          <Link href="/auth/signin" className="inline-flex">
+            <Button size="lg" variant="outline">
+              Espace Organisateur
+            </Button>
           </Link>
         </div>
       </section>
 
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardContent className="flex items-center gap-4">
-            <div className="p-3 bg-blue-100 text-blue-600 rounded-lg">
-              <Calendar size={24} />
+      {/* Cards */}
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {[
+          {
+            icon: Calendar,
+            color: "bg-[var(--accent-subtle)] text-[var(--accent-text)]", 
+            label: "Événements",
+            desc: "Consultez les conférences à venir",
+            href: "/events",
+            cta: "Parcourir →",
+          },
+          {
+            icon: Users,
+            color: "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400",
+            label: "Intervenants",
+            desc: "Découvrez les speakers et leurs sessions",
+            href: "/speakers",
+            cta: "Découvrir →",
+          },
+          {
+            icon: Star,
+            color: "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400",
+            label: "Mes favoris",
+            desc: "Construisez votre planning personnel",
+            href: "/favorites",
+            cta: "Mon planning →",
+          },
+        ].map(({ icon: Icon, color, label, desc, href, cta }) => (
+          <Link key={href} href={href} className="block">
+            <div className="group h-full bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-xl)] p-5 hover:border-[var(--border-strong)] hover:shadow-[var(--shadow)] hover:-translate-y-0.5 transition-all duration-200">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${color}`}>
+                <Icon size={20} />
+              </div>
+              <p className="font-semibold text-[var(--text-primary)] mb-1">{label}</p>
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{desc}</p>
+              <p className="text-sm font-medium text-[var(--accent-text)] mt-3 transition-all duration-200 group-hover:translate-x-1 inline-block">
+                {cta}
+              </p>
             </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Événements</p>
-              <Link href="/events">
-                <p className="text-2xl font-bold text-gray-900 underline decoration-blue-500 hover:text-blue-600 transition-colors">
-                  À venir
-                </p>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+          </Link>
+        ))}
+      </section>
 
-        <Card>
-          <CardContent className="flex items-center gap-4">
-            <div className="p-3 bg-purple-100 text-purple-600 rounded-lg">
-              <ArrowRight size={24} />
+      {/* Features */}
+      <section className="border border-[var(--border)] rounded-[var(--radius-xl)] p-6 bg-[var(--surface)]">
+        <h2 className="text-lg font-bold text-[var(--text-primary)] mb-5">Fonctionnalités</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+          {[
+            ["🎯", "Planning multi-track", "Visualisez toutes les sessions par salle et horaire"],
+            ["⚡", "Sessions Live", "Badge temps réel sur les sessions en cours"],
+            ["💬", "Q&A en direct", "Posez vos questions pendant les sessions live"],
+            ["⭐", "Favoris", "Sauvegardez vos sessions préférées en local"],
+          ].map(([emoji, title, desc]) => (
+            <div key={title} className="flex gap-3 p-3 rounded-xl bg-[var(--surface-hover)]">
+              <span className="text-xl shrink-0">{emoji}</span>
+              <div>
+                <p className="font-semibold text-[var(--text-primary)] text-sm">{title}</p>
+                <p className="text-[var(--text-secondary)] text-xs mt-0.5">{desc}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Intervenants</p>
-              <Link href="/speakers">
-                <p className="text-2xl font-bold text-gray-900 underline decoration-purple-500 hover:text-purple-600 transition-colors">
-                  Découvrir
-                </p>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-4">
-            <div className="p-3 bg-yellow-100 text-yellow-600 rounded-lg">
-              <Calendar size={24} />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Mes favoris</p>
-              <Link href="/favorites">
-                <p className="text-2xl font-bold text-gray-900 underline decoration-yellow-500 hover:text-yellow-600 transition-colors">
-                  Mon planning
-                </p>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+          ))}
+        </div>
       </section>
     </div>
   );
