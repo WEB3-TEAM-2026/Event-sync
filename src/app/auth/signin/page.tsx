@@ -21,7 +21,7 @@ export default function SignInPage() {
       redirect: false,
       email,
       password,
-      callbackUrl: "/"
+      
     });
 
     setLoading(false);
@@ -31,7 +31,7 @@ export default function SignInPage() {
       return;
     }
 
-    router.push(result?.url ?? "/");
+    router.push("/dashboard");
   }
 
   return (
