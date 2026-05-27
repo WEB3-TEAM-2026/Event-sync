@@ -4,167 +4,157 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Star, Clock, MapPin, Radio, Trash2 } from "lucide-react";
+import { Star, Clock, MapPin, Trash2, ArrowRight } from "lucide-react";
+import { LiveBadge } from "@/components/ui/LiveBadge";
+import { Breadcrumb } from "@/components/layout/Breadcrumb";
 
-interface Speaker {
-  id: string;
-  fullName: string;
-}
-
+interface Speaker { id: string; fullName: string; }
 interface Session {
-  id: string;
-  title: string;
-  description: string;
-  startTime: string;
-  endTime: string;
-  isLive: boolean;
+  id: string; title: string; description: string;
+  startTime: string; endTime: string; isLive: boolean;
   room: { id: string; name: string };
   speakers: Speaker[];
   event: { id: string; title: string };
 }
 
 export default function FavoritesPage() {
-  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
+  const initialFavoriteIds: string[] = (() => {
     try {
       const stored = localStorage.getItem("eventsync_favorites");
-      const ids: string[] = stored ? JSON.parse(stored) : [];
-      setFavoriteIds(ids);
-
-      if (ids.length === 0) {
-        setLoading(false);
-        return;
-      }
-
-      // Charger les sessions via l'API
-      fetch("/api/sessions")
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.success) {
-            const favSessions = data.data.filter((s: Session) =>
-              ids.includes(s.id)
-            );
-            setSessions(favSessions);
-          }
-        })
-        .finally(() => setLoading(false));
+      return stored ? JSON.parse(stored) : [];
     } catch {
-      setLoading(false);
+      return [];
     }
-  }, []);
+  })();
+
+  const [favoriteIds, setFavoriteIds] = useState<string[]>(initialFavoriteIds);
+  const [sessions, setSessions]       = useState<Session[]>([]);
+  const [loading, setLoading]         = useState<boolean>(initialFavoriteIds.length > 0);
+
+  useEffect(() => {
+    if (favoriteIds.length === 0) return;
+
+    let isMounted = true;
+
+    fetch("/api/sessions")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!isMounted) return;
+        if (data.success) {
+          setSessions(data.data.filter((s: Session) => favoriteIds.includes(s.id)));
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [favoriteIds]);
 
   function removeFavorite(sessionId: string) {
     const next = favoriteIds.filter((id) => id !== sessionId);
     setFavoriteIds(next);
     setSessions((prev) => prev.filter((s) => s.id !== sessionId));
-    try {
-      localStorage.setItem("eventsync_favorites", JSON.stringify(next));
-    } catch {}
+    try { localStorage.setItem("eventsync_favorites", JSON.stringify(next)); } catch {}
   }
 
   function clearAll() {
-    setFavoriteIds([]);
-    setSessions([]);
-    try {
-      localStorage.removeItem("eventsync_favorites");
-    } catch {}
+    setFavoriteIds([]); setSessions([]);
+    try { localStorage.removeItem("eventsync_favorites"); } catch {}
   }
 
+  const liveSessions = sessions.filter((s) => s.isLive);
+
   return (
-    <div className="space-y-8">
-      <div className="border-b border-gray-100 pb-6 flex items-center justify-between">
+    <div className="space-y-7 animate-fade-in">
+      <Breadcrumb items={[{ label: "Mes favoris" }]} />
+
+      <div className="pb-6 border-b border-[var(--border)] flex items-center justify-between gap-4">
         <div>
-          <h1 className="flex items-center gap-2 text-3xl font-bold text-gray-900">
-            <Star className="text-yellow-400" size={28} fill="currentColor" />
+          <h1 className="flex items-center gap-2.5 text-3xl font-bold text-[var(--text-primary)]">
+            <Star className="text-yellow-400" size={26} fill="currentColor" />
             Mes favoris
           </h1>
-          <p className="mt-2 text-gray-500">
+          <p className="mt-1.5 text-[var(--text-secondary)]">
             {loading
               ? "Chargement..."
               : `${sessions.length} session${sessions.length !== 1 ? "s" : ""} sauvegardée${sessions.length !== 1 ? "s" : ""}`}
           </p>
         </div>
-        {sessions.length > 0 && (
-          <button
-            onClick={clearAll}
-            className="text-sm text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1.5"
-          >
-            <Trash2 size={14} />
-            Tout effacer
-          </button>
-        )}
+        <div className="flex items-center gap-3 shrink-0">
+          {liveSessions.length > 0 && (
+            <LiveBadge variant="pill" count={liveSessions.length} />
+          )}
+          {sessions.length > 0 && (
+            <button
+              onClick={clearAll}
+              className="text-sm text-[var(--text-tertiary)] hover:text-red-500 transition-colors flex items-center gap-1.5"
+            >
+              <Trash2 size={14} />
+              Tout effacer
+            </button>
+          )}
+        </div>
       </div>
 
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-24 bg-gray-100 rounded-xl animate-pulse"
-            />
+            <div key={i} className="h-24 skeleton" />
           ))}
         </div>
       ) : sessions.length === 0 ? (
-        <div className="text-center py-20 text-gray-400">
-          <Star size={48} className="mx-auto mb-4 opacity-20" />
-          <p className="text-lg font-medium">Aucune session en favori.</p>
-          <p className="text-sm mt-2">
-            Parcourez les événements et ajoutez des sessions avec l'étoile ★
+        <div className="text-center py-20">
+          <div className="w-16 h-16 rounded-2xl bg-[var(--surface-hover)] flex items-center justify-center mx-auto mb-5">
+            <Star size={28} className="text-[var(--text-tertiary)] opacity-50" />
+          </div>
+          <p className="text-lg font-semibold text-[var(--text-primary)] mb-2">Aucun favori pour l&apos;instant</p>
+          <p className="text-sm text-[var(--text-secondary)] max-w-xs mx-auto">
+            Parcourez les événements et cliquez sur ★ pour sauvegarder vos sessions.
           </p>
           <Link
             href="/events"
-            className="inline-block mt-6 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center gap-2 mt-6 px-5 py-2.5 bg-[var(--accent)] text-white rounded-xl text-sm font-medium hover:bg-[var(--accent-hover)] transition-colors"
           >
-            Voir les événements
+            Voir les événements <ArrowRight size={15} />
           </Link>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {sessions.map((session) => (
-            <div key={session.id} className="relative">
-              <Link
-                href={`/events/${session.event.id}/sessions/${session.id}`}
-              >
-                <div
-                  className={`group border rounded-xl p-4 pr-12 transition-all hover:shadow-sm ${
-                    session.isLive
-                      ? "bg-red-50 border-red-200 hover:border-red-400"
-                      : "bg-white border-gray-200 hover:border-blue-300"
-                  }`}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    {session.isLive && (
-                      <span className="flex items-center gap-1 px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full animate-pulse">
-                        <Radio size={8} />
-                        LIVE
-                      </span>
-                    )}
-                    <p className="font-semibold text-sm text-gray-900 group-hover:text-blue-700 transition-colors">
+            <div key={session.id} className="relative group">
+              <Link href={`/events/${session.event.id}/sessions/${session.id}`}>
+                <div className={`border rounded-[var(--radius-lg)] p-4 pr-12 transition-all hover:shadow-[var(--shadow-sm)] ${
+                  session.isLive
+                    ? "bg-red-500/5 border-red-500/20 hover:border-red-500/40"
+                    : "bg-[var(--surface)] border-[var(--border)] hover:border-[var(--border-strong)]"
+                }`}>
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    {session.isLive && <LiveBadge variant="pill" />}
+                    <p className="font-semibold text-sm text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
                       {session.title}
                     </p>
                   </div>
-                  <p className="text-xs text-blue-600 font-medium mb-2">
+                  <p className="text-xs text-[var(--accent-text)] font-medium mb-2">
                     {session.event.title}
                   </p>
-                  <div className="flex flex-wrap gap-3 text-xs text-gray-400">
+                  <div className="flex flex-wrap gap-3 text-xs text-[var(--text-tertiary)]">
                     <span className="flex items-center gap-1">
-                      <Clock size={11} />
-                      {format(new Date(session.startTime), "d MMM · HH:mm", {
-                        locale: fr,
-                      })}{" "}
-                      → {format(new Date(session.endTime), "HH:mm")}
+                      <Clock size={10} />
+                      {format(new Date(session.startTime), "d MMM · HH:mm", { locale: fr })}
+                      {" → "}
+                      {format(new Date(session.endTime), "HH:mm")}
                     </span>
                     <span className="flex items-center gap-1">
-                      <MapPin size={11} />
+                      <MapPin size={10} />
                       {session.room.name}
                     </span>
                     {session.speakers.length > 0 && (
-                      <span>
-                        {session.speakers.map((s) => s.fullName).join(", ")}
-                      </span>
+                      <span>{session.speakers.map((s) => s.fullName).join(", ")}</span>
                     )}
                   </div>
                 </div>
@@ -172,10 +162,10 @@ export default function FavoritesPage() {
 
               <button
                 onClick={() => removeFavorite(session.id)}
-                className="absolute top-3 right-3 p-1.5 text-yellow-400 hover:text-red-400 transition-colors"
+                className="absolute top-3.5 right-3.5 p-1.5 rounded-lg text-yellow-400 hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all"
                 title="Retirer des favoris"
               >
-                <Star size={16} fill="currentColor" />
+                <Star size={15} fill="currentColor" />
               </button>
             </div>
           ))}
