@@ -2,13 +2,14 @@ import { prisma } from "@/lib/prisma";
 import { isSessionLive } from "@/lib/utils/date";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Calendar, MapPin, Clock, Users, Radio } from "lucide-react";
+import { Calendar, MapPin, Clock, Users } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { MultiTrackPlanning } from "@/components/events/MultiTrackPlanning";
+import { LiveBadge } from "@/components/ui/LiveBadge";
+import { Breadcrumb } from "@/components/layout/Breadcrumb";
 
 export const revalidate = 30;
-
 type Props = { params: Promise<{ id: string }> };
 
 export default async function EventDetailPage({ params }: Props) {
@@ -18,10 +19,7 @@ export default async function EventDetailPage({ params }: Props) {
     where: { id },
     include: {
       sessions: {
-        include: {
-          room: true,
-          speakers: { include: { speaker: true } },
-        },
+        include: { room: true, speakers: { include: { speaker: true } } },
         orderBy: { startTime: "asc" },
       },
     },
@@ -36,67 +34,69 @@ export default async function EventDetailPage({ params }: Props) {
   }));
 
   const liveSessions = sessions.filter((s) => s.isLive);
-
-  const rooms = Array.from(
-    new Map(sessions.map((s) => [s.room.id, s.room])).values()
-  );
+  const rooms = Array.from(new Map(sessions.map((s) => [s.room.id, s.room])).values());
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="border-b border-gray-100 pb-6">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold text-gray-900">{event.title}</h1>
-              {liveSessions.length > 0 && (
-                <span className="flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 border border-red-200 rounded-full text-sm font-semibold animate-pulse">
-                  <Radio size={12} />
-                  {liveSessions.length} LIVE
-                </span>
-              )}
-            </div>
-            <p className="text-gray-600 max-w-2xl">{event.description}</p>
-          </div>
-        </div>
+    <div className="space-y-8 animate-fade-in">
+      <Breadcrumb
+        items={[
+          { label: "Événements", href: "/events" },
+          { label: event.title },
+        ]}
+      />
 
-        <div className="flex flex-wrap gap-5 mt-4 text-sm text-gray-500">
+      {/* Header */}
+      <div className="pb-6 border-b border-[var(--border)]">
+        <div className="flex items-start gap-3 mb-3 flex-wrap">
+          {liveSessions.length > 0 && (
+            <LiveBadge variant="pill" count={liveSessions.length} className="mt-1.5" />
+          )}
+          <h1 className="text-3xl font-bold text-[var(--text-primary)]">{event.title}</h1>
+        </div>
+        <p className="text-[var(--text-secondary)] max-w-2xl">{event.description}</p>
+
+        <div className="flex flex-wrap gap-5 mt-4 text-sm text-[var(--text-tertiary)]">
           <span className="flex items-center gap-2">
-            <Calendar size={15} className="text-blue-400" />
+            <Calendar size={14} className="text-[var(--accent)]" />
             {format(new Date(event.startDate), "d MMMM yyyy", { locale: fr })}
             {" → "}
             {format(new Date(event.endDate), "d MMMM yyyy", { locale: fr })}
           </span>
           <span className="flex items-center gap-2">
-            <MapPin size={15} className="text-blue-400" />
+            <MapPin size={14} className="text-[var(--accent)]" />
             {event.location}
           </span>
           <span className="flex items-center gap-2">
-            <Clock size={15} className="text-blue-400" />
+            <Clock size={14} className="text-[var(--accent)]" />
             {sessions.length} session{sessions.length !== 1 ? "s" : ""}
           </span>
           <span className="flex items-center gap-2">
-            <Users size={15} className="text-blue-400" />
+            <Users size={14} className="text-[var(--accent)]" />
             {rooms.length} salle{rooms.length !== 1 ? "s" : ""}
           </span>
         </div>
       </div>
 
-      {/* Sessions live en cours */}
+      {/* Sessions live */}
       {liveSessions.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-5">
-          <h2 className="flex items-center gap-2 font-semibold text-red-700 mb-3">
-            <Radio size={16} className="animate-pulse" />
+        <div className="rounded-[var(--radius-xl)] border border-red-500/20 bg-red-500/5 dark:bg-red-500/10 p-5">
+          <h2 className="flex items-center gap-2.5 font-semibold text-[var(--text-primary)] mb-4">
+            <LiveBadge variant="dot" />
             En ce moment
           </h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {liveSessions.map((s) => (
               <Link key={s.id} href={`/events/${event.id}/sessions/${s.id}`}>
-                <div className="bg-white border border-red-200 rounded-xl p-4 hover:border-red-400 hover:shadow-sm transition-all">
-                  <p className="font-medium text-gray-900 text-sm">{s.title}</p>
-                  <p className="text-xs text-gray-400 mt-1">{s.room.name}</p>
+                <div className="bg-[var(--surface)] border border-red-500/20 rounded-[var(--radius-lg)] p-4 hover:border-red-500/40 hover:shadow-[var(--shadow-sm)] transition-all group">
+                  <div className="flex items-center gap-2 mb-1">
+                    <LiveBadge variant="pill" />
+                    <p className="font-medium text-[var(--text-primary)] text-sm group-hover:text-[var(--accent)] transition-colors truncate">
+                      {s.title}
+                    </p>
+                  </div>
+                  <p className="text-xs text-[var(--text-tertiary)] mt-1">{s.room.name}</p>
                   {s.speakers.length > 0 && (
-                    <p className="text-xs text-red-600 mt-1">
+                    <p className="text-xs text-red-500 dark:text-red-400 mt-1 font-medium">
                       {s.speakers.map((sp) => sp.fullName).join(", ")}
                     </p>
                   )}
@@ -107,9 +107,9 @@ export default async function EventDetailPage({ params }: Props) {
         </div>
       )}
 
-      {/* Planning multi-track */}
+      {/* Planning */}
       <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Planning</h2>
+        <h2 className="text-xl font-bold text-[var(--text-primary)] mb-4">Planning</h2>
         <MultiTrackPlanning sessions={sessions} eventId={event.id} rooms={rooms} />
       </div>
     </div>
