@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useSyncExternalStore } from "react";
 
 type Theme = "light" | "dark" | "system";
 
@@ -16,11 +16,22 @@ const ThemeContext = createContext<ThemeContextType>({
   setTheme: () => {},
 });
 
+const subscribe = (callback: () => void) => {
+  window.addEventListener("storage", callback);
+  return () => window.removeEventListener("storage", callback);
+};
+
+const getSnapshot = () => {
+  return (localStorage.getItem("eventsync_theme") as Theme | null) || "system";
+};
+
+const getServerSnapshot = () => {
+  return "system" as Theme; 
+};
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window === "undefined") return "system";
-    return (localStorage.getItem("eventsync_theme") as Theme | null) || "system";
-  });
+  const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  
   const [resolved, setResolved] = useState<"light" | "dark">("light");
 
   useEffect(() => {
@@ -40,9 +51,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [theme]);
 
   function setTheme(t: Theme) {
-    setThemeState(t);
     if (typeof window !== "undefined") {
       localStorage.setItem("eventsync_theme", t);
+      window.dispatchEvent(new Event("storage"));
     }
   }
 

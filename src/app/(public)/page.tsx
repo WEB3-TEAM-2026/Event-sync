@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
-import { Calendar, Users, Star, ArrowRight, Radio } from "lucide-react";
+import { Calendar, Users, Star, ArrowRight, Radio, Target, Zap, MessageSquare, Heart } from "lucide-react";
 
 export default function HomePage() {
   return (
@@ -82,13 +82,13 @@ export default function HomePage() {
         <h2 className="text-lg font-bold text-[var(--text-primary)] mb-5">Fonctionnalités</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           {[
-            ["🎯", "Planning multi-track", "Visualisez toutes les sessions par salle et horaire"],
-            ["⚡", "Sessions Live", "Badge temps réel sur les sessions en cours"],
-            ["💬", "Q&A en direct", "Posez vos questions pendant les sessions live"],
-            ["⭐", "Favoris", "Sauvegardez vos sessions préférées en local"],
-          ].map(([emoji, title, desc]) => (
+            { icon: Target, title: "Planning multi-track", desc: "Visualisez toutes les sessions par salle et horaire" },
+            { icon: Zap, title: "Sessions Live", desc: "Badge temps réel sur les sessions en cours" },
+            { icon: MessageSquare, title: "Q&A en direct", desc: "Posez vos questions pendant les sessions live" },
+            { icon: Heart, title: "Favoris", desc: "Sauvegardez vos sessions préférées en local" },
+          ].map(({ icon: Icon, title, desc }) => (
             <div key={title} className="flex gap-3 p-3 rounded-xl bg-[var(--surface-hover)]">
-              <span className="text-xl shrink-0">{emoji}</span>
+              <Icon size={20} className="shrink-0 text-[var(--accent-text)]" />
               <div>
                 <p className="font-semibold text-[var(--text-primary)] text-sm">{title}</p>
                 <p className="text-[var(--text-secondary)] text-xs mt-0.5">{desc}</p>
