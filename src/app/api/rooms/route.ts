@@ -12,11 +12,15 @@ export async function GET() {
             },
         });
 
-        return NextResponse.json({
-            success: true,
-            data: rooms,
-            count: rooms.length,
-        });
+        return NextResponse.json(
+            { success: true, data: rooms, count: rooms.length },
+            {
+                headers: {
+                    "X-Total-Count": String(rooms.length),
+                    "Access-Control-Expose-Headers": "X-Total-Count",
+                },
+            },
+        );
     } catch (error) {
         console.error("[GET /api/rooms]", error);
         return NextResponse.json(

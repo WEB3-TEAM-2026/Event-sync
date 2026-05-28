@@ -1,21 +1,33 @@
-import { cn } from "@/lib/utils/cn"; 
+import { cn } from "@/lib/utils/cn";
 
-export const Badge = ({ 
-  children, 
-  color = "gray" 
-}: { 
-  children: React.ReactNode, 
-  color?: "red" | "green" | "blue" | "gray" 
-}) => {
-  const colors = {
-    red: "bg-red-100 text-red-700 border-red-200",
-    green: "bg-green-100 text-green-700 border-green-200",
-    blue: "bg-blue-100 text-blue-700 border-blue-200",
-    gray: "bg-gray-100 text-gray-700 border-gray-200",
+type BadgeColor = "red" | "green" | "blue" | "gray" | "yellow" | "purple";
+
+interface BadgeProps {
+  children: React.ReactNode;
+  color?: BadgeColor;
+  className?: string;
+  live?: boolean;
+}
+
+export const Badge = ({ children, color = "gray", className, live }: BadgeProps) => {
+  const colors: Record<BadgeColor, string> = {
+    red:    "bg-[var(--live-subtle)] text-[var(--live)] border-[var(--live-border)]",
+    green:  "bg-[var(--success-subtle)] text-[var(--success)] border-green-800/20",
+    blue:   "bg-[var(--accent-subtle)] text-[var(--accent-text)] border-[var(--accent)]/20",
+    gray:   "bg-[var(--surface-hover)] text-[var(--text-secondary)] border-[var(--border)]",
+    yellow: "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-800",
+    purple: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400",
   };
 
   return (
-    <span className={cn("px-2 py-0.5 rounded-full text-xs font-semibold border", colors[color])}>
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border",
+        colors[color],
+        className
+      )}
+    >
+      {live && <span className="live-dot" />}
       {children}
     </span>
   );

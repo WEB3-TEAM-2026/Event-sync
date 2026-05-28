@@ -32,7 +32,15 @@ export async function GET() {
             })),
         }));
 
-        return NextResponse.json({ success: true, data: eventsWithLive });
+        return NextResponse.json(
+            { success: true, data: eventsWithLive, count: eventsWithLive.length },
+            {
+                headers: {
+                    "X-Total-Count": String(eventsWithLive.length),
+                    "Access-Control-Expose-Headers": "X-Total-Count",
+                },
+            },
+        );
     } catch (error) {
         console.error("[GET /api/events]", error);
         return NextResponse.json(
