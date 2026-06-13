@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireOrganizer, isNextResponse } from "@/lib/auth/requireOrganizer";
 import { isSessionLive } from "@/lib/utils/date";
 
-// ─── GET /api/sessions — PUBLIC ───────────────────────────────────────────────
+//GET /api/sessions PUBLIC
 
 export async function GET() {
     try {
@@ -12,6 +12,9 @@ export async function GET() {
                 room: true,
                 event: true,
                 speakers: { include: { speaker: true } },
+                questions: {                              // ← AJOUTÉ
+                    orderBy: [{ upvotes: "desc" }, { createdAt: "desc" }],
+                },
             },
             orderBy: { startTime: "asc" },
         });
@@ -28,7 +31,6 @@ export async function GET() {
             { success: true, data, count: total },
             {
                 headers: {
-                    // Requis par React Admin pour la pagination
                     "X-Total-Count": String(total),
                     "Access-Control-Expose-Headers": "X-Total-Count",
                 },
@@ -43,7 +45,7 @@ export async function GET() {
     }
 }
 
-// ─── POST /api/sessions — ORGANISATEUR ───────────────────────────────────────
+// POST /api/sessions — ORGANISATEUR
 
 export async function POST(request: NextRequest) {
     const auth = await requireOrganizer(request);
@@ -72,10 +74,7 @@ export async function POST(request: NextRequest) {
 
         if (!title?.trim() || !startTime || !endTime || !eventId || !roomId) {
             return NextResponse.json(
-                {
-                    success: false,
-                    error: "title, startTime, endTime, eventId et roomId sont requis.",
-                },
+                { success: false, error: "title, startTime, endTime, eventId et roomId sont requis." },
                 { status: 400 },
             );
         }
@@ -136,6 +135,7 @@ export async function POST(request: NextRequest) {
                 room: true,
                 event: true,
                 speakers: { include: { speaker: true } },
+                questions: true,                          // ← AJOUTÉ
             },
         });
 
