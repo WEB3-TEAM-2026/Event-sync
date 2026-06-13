@@ -4,7 +4,14 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import {
-  Home, Calendar, Users, Star, Menu, X, Settings, Zap,
+  Home,
+  Calendar,
+  Users,
+  Star,
+  Menu,
+  X,
+  Settings,
+  Zap,
 } from "lucide-react";
 import { useState } from "react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
@@ -12,10 +19,10 @@ import { useSession } from "next-auth/react";
 import type { Session } from "next-auth";
 
 const navigation = [
-  { name: "Accueil",      href: "/",          icon: Home },
-  { name: "Événements",   href: "/events",     icon: Calendar },
-  { name: "Intervenants", href: "/speakers",   icon: Users },
-  { name: "Mes favoris",  href: "/favorites",  icon: Star },
+  { name: "Accueil", href: "/", icon: Home },
+  { name: "Événements", href: "/events", icon: Calendar },
+  { name: "Intervenants", href: "/speakers", icon: Users },
+  { name: "Mes favoris", href: "/favorites", icon: Star },
 ];
 
 type SidebarContentProps = {
@@ -26,7 +33,13 @@ type SidebarContentProps = {
   onOrganizerClick: () => void;
 };
 
-const SidebarContent = ({ pathname, session, status, onClose, onOrganizerClick }: SidebarContentProps) => (
+const SidebarContent = ({
+  pathname,
+  session,
+  status,
+  onClose,
+  onOrganizerClick,
+}: SidebarContentProps) => (
   <div className="flex flex-col h-full">
     <div className="h-16 flex items-center gap-2.5 px-5 border-b border-(--border)">
       <div className="w-8 h-8 rounded-xl bg-(--accent) flex items-center justify-center shadow-sm">
@@ -54,12 +67,14 @@ const SidebarContent = ({ pathname, session, status, onClose, onOrganizerClick }
               "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150",
               isActive
                 ? "bg-(--accent-subtle) text-(--accent-text)"
-                : "text-(--text-secondary) hover:bg-(--surface-hover) hover:text-(--text-primary)"
+                : "text-(--text-secondary) hover:bg-(--surface-hover) hover:text-(--text-primary)",
             )}
           >
             <item.icon
               size={17}
-              className={isActive ? "text-(--accent)" : "text-(--text-tertiary)"}
+              className={
+                isActive ? "text-(--accent)" : "text-(--text-tertiary)"
+              }
             />
             {item.name}
             {isActive && (
@@ -76,23 +91,28 @@ const SidebarContent = ({ pathname, session, status, onClose, onOrganizerClick }
       <button
         onClick={onOrganizerClick}
         disabled={status === "loading"}
+        suppressHydrationWarning
         className={cn(
           "flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
           "border border-(--border) text-(--text-secondary)",
           "hover:border-(--accent) hover:text-(--accent-text) hover:bg-(--accent-subtle)",
-          "disabled:opacity-50"
+          "disabled:opacity-50",
         )}
       >
         <Settings size={16} className="shrink-0" />
-        {status === "loading" ? "Chargement..." : session?.user ? "Dashboard" : "Espace Organisateur"}
+        {status === "loading"
+          ? "Chargement..."
+          : session?.user
+            ? "Dashboard"
+            : "Espace Organisateur"}
       </button>
     </div>
   </div>
 );
 
 export const PublicSidebar = () => {
-  const pathname  = usePathname();
-  const router    = useRouter();
+  const pathname = usePathname();
+  const router = useRouter();
   const { data: session, status } = useSession();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -125,7 +145,7 @@ export const PublicSidebar = () => {
           "bg-(--surface) border-r border-(--border)",
           "transform transition-transform duration-250 ease-in-out",
           "lg:translate-x-0 lg:static lg:inset-0",
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          isOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
         <SidebarContent
