@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireOrganizer, isNextResponse } from "@/lib/auth/requireOrganizer";
+import { linkSpeakerSchema, validateBody } from "@/lib/validators";
 
 async function assertSessionExists(sessionId: string): Promise<NextResponse | null> {
   const session = await prisma.session.findUnique({ where: { id: sessionId }, select: { id: true } });
@@ -57,17 +58,9 @@ export async function POST(
   const { id } = await params;
 
   try {
-    let body: { speakerId?: string };
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json({ success: false, error: "Corps de requête JSON invalide" }, { status: 400 });
-    }
-
-    const { speakerId } = body;
-    if (!speakerId || typeof speakerId !== "string") {
-      return NextResponse.json({ success: false, error: "speakerId est requis" }, { status: 400 });
-    }
+    const res = await validateBody(request, linkSpeakerSchema);
+    if (res.error) return res.error;
+    const { speakerId } = res.data;
 
     const sessionNotFound = await assertSessionExists(id);
     if (sessionNotFound) return sessionNotFound;
@@ -104,17 +97,9 @@ export async function DELETE(
   const { id } = await params;
 
   try {
-    let body: { speakerId?: string };
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json({ success: false, error: "Corps de requête JSON invalide" }, { status: 400 });
-    }
-
-    const { speakerId } = body;
-    if (!speakerId || typeof speakerId !== "string") {
-      return NextResponse.json({ success: false, error: "speakerId est requis" }, { status: 400 });
-    }
+    const res = await validateBody(request, linkSpeakerSchema);
+    if (res.error) return res.error;
+    const { speakerId } = res.data;
 
     const sessionNotFound = await assertSessionExists(id);
     if (sessionNotFound) return sessionNotFound;

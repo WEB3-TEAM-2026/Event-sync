@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireOrganizer, isNextResponse } from "@/lib/auth/requireOrganizer";
+import { speakerUpdateSchema, validateBody } from "@/lib/validators";
 
 
 export async function GET(
@@ -54,8 +55,8 @@ export async function PUT(
       return NextResponse.json({ success: false, error: "Intervenant non trouvé" }, { status: 404 });
     }
 
-    const body = await request.json();
-    const { fullName, profilePhoto, bio, externalLinks } = body;
+    const res = await validateBody(request, speakerUpdateSchema);
+    const { fullName, profilePhoto, bio, externalLinks } = res.data;
 
     if (!fullName && !bio && profilePhoto === undefined && externalLinks === undefined) {
       return NextResponse.json(

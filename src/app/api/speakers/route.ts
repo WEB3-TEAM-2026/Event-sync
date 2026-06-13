@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireOrganizer, isNextResponse } from "@/lib/auth/requireOrganizer";
+import { speakerSchema, validateBody } from "@/lib/validators";
 
 // ─── GET /api/speakers — PUBLIC ───────────────────────────────────────────────
 
@@ -37,27 +38,9 @@ export async function POST(request: NextRequest) {
     if (isNextResponse(auth)) return auth;
 
     try {
-        const body = await request.json().catch(() => null);
-        if (!body) {
-            return NextResponse.json(
-                { success: false, error: "Requête invalide." },
-                { status: 400 },
-            );
-        }
-
-        const { fullName, profilePhoto, bio, externalLinks } = body as {
-            fullName?: string;
-            profilePhoto?: string;
-            bio?: string;
-            externalLinks?: Record<string, string>;
-        };
-
-        if (!fullName?.trim() || !bio?.trim()) {
-            return NextResponse.json(
-                { success: false, error: "fullName et bio sont requis." },
-                { status: 400 },
-            );
-        }
+        const res = await validateBody(request, speakerSchema);
+        if (res.error) return res.error;
+        const { fullName, profilePhoto, bio, externalLinks } = res.data;
 
         const speaker = await prisma.speaker.create({
             data: {
