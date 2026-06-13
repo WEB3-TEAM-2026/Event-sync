@@ -15,7 +15,7 @@ type Props = { params: Promise<{ id: string; sessionId: string }> };
 export default async function SessionDetailPage({ params }: Props) {
   const { id, sessionId } = await params;
 
-  const session = await prisma.session.findUnique({
+  const session = await prisma.session.findFirst({
     where: { id: sessionId, eventId: id },
     include: {
       event: true,

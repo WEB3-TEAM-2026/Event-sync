@@ -12,7 +12,7 @@ export async function GET() {
                 room: true,
                 event: true,
                 speakers: { include: { speaker: true } },
-                questions: {                              // ← AJOUTÉ
+                questions: {                              
                     orderBy: [{ upvotes: "desc" }, { createdAt: "desc" }],
                 },
             },
