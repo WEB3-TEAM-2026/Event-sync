@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireOrganizer, isNextResponse } from "@/lib/auth/requireOrganizer";
 import { checkEventOwnership, isNextResponse as isNR } from "@/lib/auth/checkEventOwnership";
 import { isSessionLive } from "@/lib/utils/date";
+import { sessionSchema, validateBody } from "@/lib/validators";
 
 // GET /api/events/[id]/sessions
 
@@ -62,33 +63,12 @@ export async function POST(
   if (isNR(ownership)) return ownership;
 
   try {
-    const body = await request.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ success: false, error: "Requête invalide." }, { status: 400 });
-    }
-
-    const { title, description, startTime, endTime, roomId, capacity } = body as {
-      title?: string;
-      description?: string;
-      startTime?: string;
-      endTime?: string;
-      roomId?: string;
-      capacity?: number;
-    };
-
-    if (!title?.trim() || !description?.trim() || !startTime || !endTime || !roomId) {
-      return NextResponse.json(
-        { success: false, error: "title, description, startTime, endTime et roomId sont requis." },
-        { status: 400 }
-      );
-    }
+    const res = await validateBody(request, sessionSchema);
+    if (res.error) return res.error;
+    const { title, description, startTime, endTime, roomId, capacity } = res.data;
 
     const start = new Date(startTime);
     const end = new Date(endTime);
-
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      return NextResponse.json({ success: false, error: "Horaires invalides." }, { status: 400 });
-    }
 
     if (end <= start) {
       return NextResponse.json(

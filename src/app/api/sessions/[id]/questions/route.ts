@@ -58,22 +58,9 @@ export async function POST(
 ) {
   try {
     const { id: sessionId } = await params;
-    const body = await request.json();
-    const { content, authorName } = body;
-
-    if (!content || content.trim().length === 0) {
-      return NextResponse.json(
-        { success: false, error: "Le contenu de la question est requis" },
-        { status: 400 }
-      );
-    }
-
-    if (content.length > 1000) {
-      return NextResponse.json(
-        { success: false, error: "La question ne peut pas dépasser 1000 caractères" },
-        { status: 400 }
-      );
-    }
+    const { validateBody, questionSchema } = await import("@/lib/validators");
+    const res = await validateBody(request, questionSchema);
+    const { content, authorName } = res.data;
 
     const session = await prisma.session.findUnique({
       where: { id: sessionId },

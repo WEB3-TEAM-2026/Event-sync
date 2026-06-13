@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { eventSchema, validateBody } from "@/lib/validators";
 import { authOptions } from "@/lib/auth/auth";
 import { prisma } from "@/lib/prisma";
 import { requireOrganizer, isNextResponse } from "@/lib/auth/requireOrganizer";
@@ -57,54 +58,12 @@ export async function POST(request: NextRequest) {
     if (isNextResponse(auth)) return auth;
 
     try {
-        const body = await request.json().catch(() => null);
-        if (!body) {
-            return NextResponse.json(
-                { success: false, error: "Requête invalide." },
-                { status: 400 },
-            );
-        }
-
-        const { title, description, startDate, endDate, location } = body as {
-            title?: string;
-            description?: string;
-            startDate?: string;
-            endDate?: string;
-            location?: string;
-        };
-
-        if (
-            !title?.trim() ||
-            !description?.trim() ||
-            !startDate ||
-            !endDate ||
-            !location?.trim()
-        ) {
-            return NextResponse.json(
-                { success: false, error: "Tous les champs sont requis." },
-                { status: 400 },
-            );
-        }
+        const res = await validateBody(request, eventSchema);
+        if (res.error) return res.error;
+        const { title, description, startDate, endDate, location } = res.data;
 
         const start = new Date(startDate);
         const end = new Date(endDate);
-
-        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-            return NextResponse.json(
-                { success: false, error: "Dates invalides." },
-                { status: 400 },
-            );
-        }
-
-        if (end <= start) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    error: "La date de fin doit être après la date de début.",
-                },
-                { status: 400 },
-            );
-        }
 
         const event = await prisma.event.create({
             data: {

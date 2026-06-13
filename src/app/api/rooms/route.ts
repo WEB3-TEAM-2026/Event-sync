@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireOrganizer, isNextResponse } from "@/lib/auth/requireOrganizer";
+import { roomSchema, validateBody } from "@/lib/validators";
 
 //GET /api/rooms PUBLIC
 export async function GET() {
@@ -36,22 +37,9 @@ export async function POST(request: NextRequest) {
     if (isNextResponse(auth)) return auth;
 
     try {
-        const body = await request.json().catch(() => null);
-        if (!body) {
-            return NextResponse.json(
-                { success: false, error: "Requête invalide." },
-                { status: 400 },
-            );
-        }
-
-        const { name } = body as { name?: string };
-
-        if (!name?.trim()) {
-            return NextResponse.json(
-                { success: false, error: "Le nom de la salle est requis." },
-                { status: 400 },
-            );
-        }
+        const res = await validateBody(request, roomSchema);
+        if (res.error) return res.error;
+        const { name } = res.data;
 
         const room = await prisma.room.create({
             data: { name: name.trim() },

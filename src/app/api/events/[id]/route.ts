@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireOrganizer, isNextResponse } from "@/lib/auth/requireOrganizer";
 import { checkEventOwnership, isNextResponse as isNR } from "@/lib/auth/checkEventOwnership";
 import { isSessionLive } from "@/lib/utils/date";
+import { eventUpdateSchema, validateBody } from "@/lib/validators";
 
 // GET /api/events/[id] PUBLIC
 
@@ -62,28 +63,12 @@ export async function PUT(
   if (isNR(ownership)) return ownership;
 
   try {
-    const body = await request.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ success: false, error: "Requête invalide." }, { status: 400 });
-    }
-
-    const { title, description, startDate, endDate, location } = body as {
-      title?: string;
-      description?: string;
-      startDate?: string;
-      endDate?: string;
-      location?: string;
-    };
+    const res = await validateBody(request, eventUpdateSchema);
+    if (res.error) return res.error;
+    const { title, description, startDate, endDate, location } = res.data;
 
     const start = startDate ? new Date(startDate) : undefined;
     const end = endDate ? new Date(endDate) : undefined;
-
-    if (start && isNaN(start.getTime())) {
-      return NextResponse.json({ success: false, error: "Date de début invalide." }, { status: 400 });
-    }
-    if (end && isNaN(end.getTime())) {
-      return NextResponse.json({ success: false, error: "Date de fin invalide." }, { status: 400 });
-    }
 
     const effectiveStart = start ?? ownership.event!.startDate;
     const effectiveEnd = end ?? ownership.event!.endDate;

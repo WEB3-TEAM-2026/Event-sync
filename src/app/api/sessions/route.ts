@@ -12,7 +12,7 @@ export async function GET() {
                 room: true,
                 event: true,
                 speakers: { include: { speaker: true } },
-                questions: {                              // ← AJOUTÉ
+                questions: {                              
                     orderBy: [{ upvotes: "desc" }, { createdAt: "desc" }],
                 },
             },
@@ -52,49 +52,30 @@ export async function POST(request: NextRequest) {
     if (isNextResponse(auth)) return auth;
 
     try {
-        const body = await request.json().catch(() => null);
-        if (!body) {
-            return NextResponse.json(
-                { success: false, error: "Requête invalide." },
-                { status: 400 },
-            );
-        }
+const { sessionCreateSchema, validateBody } = await import("@/lib/validators");
+    const res = await validateBody(request, sessionCreateSchema);
+    if (res.error) return res.error;
 
-        const { title, description, startTime, endTime, eventId, roomId, capacity, speakerIds } =
-            body as {
-                title?: string;
-                description?: string;
-                startTime?: string;
-                endTime?: string;
-                eventId?: string;
-                roomId?: string;
-                capacity?: number;
-                speakerIds?: string[];
-            };
+    const { title, description, startTime, endTime, eventId, roomId, capacity, speakerIds } = res.data as {
+      title: string;
+      description?: string;
+      startTime: string;
+      endTime: string;
+      eventId: string;
+      roomId: string;
+      capacity?: number;
+      speakerIds?: string[];
+    };
 
-        if (!title?.trim() || !startTime || !endTime || !eventId || !roomId) {
-            return NextResponse.json(
-                { success: false, error: "title, startTime, endTime, eventId et roomId sont requis." },
-                { status: 400 },
-            );
-        }
+    const start = new Date(startTime);
+    const end = new Date(endTime);
 
-        const start = new Date(startTime);
-        const end = new Date(endTime);
-
-        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-            return NextResponse.json(
-                { success: false, error: "Horaires invalides." },
-                { status: 400 },
-            );
-        }
-
-        if (end <= start) {
-            return NextResponse.json(
-                { success: false, error: "L'heure de fin doit être après l'heure de début." },
-                { status: 400 },
-            );
-        }
+    if (end <= start) {
+      return NextResponse.json(
+        { success: false, error: "L'heure de fin doit être après l'heure de début." },
+        { status: 400 },
+      );
+    }
 
         const [event, room] = await Promise.all([
             prisma.event.findUnique({ where: { id: eventId }, select: { id: true } }),

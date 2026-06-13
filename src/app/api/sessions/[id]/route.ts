@@ -71,40 +71,21 @@ export async function PUT(
       );
     }
 
-    const body = await request.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json(
-        { success: false, error: "Requête invalide." },
-        { status: 400 }
-      );
-    }
-
-    const { title, description, startTime, endTime, roomId, capacity, speakerIds } =
-      body as {
-        title?: string;
-        description?: string;
-        startTime?: string;
-        endTime?: string;
-        roomId?: string;
-        capacity?: number;
-        speakerIds?: string[];
-      };
+    const { validateBody, sessionUpdateSchema } = await import("@/lib/validators");
+    const res = await validateBody(request, sessionUpdateSchema);
+    if (res.error) return res.error;
+    const { title, description, startTime, endTime, roomId, capacity, speakerIds } = res.data as {
+      title?: string;
+      description?: string;
+      startTime?: string;
+      endTime?: string;
+      roomId?: string;
+      capacity?: number;
+      speakerIds?: string[];
+    };
 
     const start = startTime ? new Date(startTime) : undefined;
     const end = endTime ? new Date(endTime) : undefined;
-
-    if (start && isNaN(start.getTime())) {
-      return NextResponse.json(
-        { success: false, error: "Heure de début invalide." },
-        { status: 400 }
-      );
-    }
-    if (end && isNaN(end.getTime())) {
-      return NextResponse.json(
-        { success: false, error: "Heure de fin invalide." },
-        { status: 400 }
-      );
-    }
 
     const effectiveStart = start ?? existing.startTime;
     const effectiveEnd = end ?? existing.endTime;
