@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import {
   Home,
@@ -12,11 +12,10 @@ import {
   X,
   Settings,
   Zap,
+  ExternalLink,
 } from "lucide-react";
 import { useState } from "react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import { useSession } from "next-auth/react";
-import type { Session } from "next-auth";
 
 const navigation = [
   { name: "Accueil", href: "/", icon: Home },
@@ -25,21 +24,17 @@ const navigation = [
   { name: "Mes favoris", href: "/favorites", icon: Star },
 ];
 
+const ADMIN_URL =
+  typeof window !== "undefined"
+    ? (process.env.NEXT_PUBLIC_ADMIN_URL ?? "http://localhost:5173")
+    : "http://localhost:5173";
+
 type SidebarContentProps = {
   pathname: string | null;
-  session: Session | null;
-  status: "authenticated" | "unauthenticated" | "loading";
   onClose: () => void;
-  onOrganizerClick: () => void;
 };
 
-const SidebarContent = ({
-  pathname,
-  session,
-  status,
-  onClose,
-  onOrganizerClick,
-}: SidebarContentProps) => (
+const SidebarContent = ({ pathname, onClose }: SidebarContentProps) => (
   <div className="flex flex-col h-full">
     <div className="h-16 flex items-center gap-2.5 px-5 border-b border-(--border)">
       <div className="w-8 h-8 rounded-xl bg-(--accent) flex items-center justify-center shadow-sm">
@@ -88,39 +83,29 @@ const SidebarContent = ({
     <div className="p-3 space-y-1.5 border-t border-(--border)">
       <ThemeToggle />
 
-      <button
-        onClick={onOrganizerClick}
-        disabled={status === "loading"}
-        suppressHydrationWarning
+      {/* Organisateur button*/}
+      <a
+        href={ADMIN_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={onClose}
         className={cn(
           "flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
           "border border-(--border) text-(--text-secondary)",
           "hover:border-(--accent) hover:text-(--accent-text) hover:bg-(--accent-subtle)",
-          "disabled:opacity-50",
         )}
       >
         <Settings size={16} className="shrink-0" />
-        {status === "loading"
-          ? "Chargement..."
-          : session?.user
-            ? "Dashboard"
-            : "Espace Organisateur"}
-      </button>
+        <span>Page organisateur</span>
+        <ExternalLink size={13} className="ml-auto opacity-50" />
+      </a>
     </div>
   </div>
 );
 
 export const PublicSidebar = () => {
   const pathname = usePathname();
-  const router = useRouter();
-  const { data: session, status } = useSession();
   const [isOpen, setIsOpen] = useState(false);
-
-  function handleOrganizerClick() {
-    setIsOpen(false);
-    if (status === "loading") return;
-    router.push(session?.user ? "/dashboard" : "/auth/signin");
-  }
 
   return (
     <>
@@ -150,10 +135,7 @@ export const PublicSidebar = () => {
       >
         <SidebarContent
           pathname={pathname}
-          session={session}
-          status={status}
           onClose={() => setIsOpen(false)}
-          onOrganizerClick={handleOrganizerClick}
         />
       </aside>
     </>
