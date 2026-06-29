@@ -60,6 +60,8 @@ export async function POST(
     const { id: sessionId } = await params;
     const { validateBody, questionSchema } = await import("@/lib/validators");
     const res = await validateBody(request, questionSchema);
+    if (res.error) return res.error;
+
     const { content, authorName } = res.data;
 
     const session = await prisma.session.findUnique({

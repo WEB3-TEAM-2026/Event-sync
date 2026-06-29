@@ -74,8 +74,11 @@ export const sessionUpdateSchema = z
 export const linkSpeakerSchema = z.object({ speakerId: z.string().min(1, "speakerId requis.") });
 
 export const questionSchema = z.object({
-  content: z.string().min(1, "Le contenu est requis.").max(1000, "La question ne peut pas dépasser 1000 caractères."),
-  authorName: z.string().optional(),
+  content: z
+    .string()
+    .min(1, "Le contenu est requis.")
+    .max(1000, "La question ne peut pas dépasser 1000 caractères."),
+  authorName: z.string().nullable().optional(),
 });
 
 export const speakerUpdateSchema = z.object({
@@ -88,7 +91,7 @@ export const speakerUpdateSchema = z.object({
 export const speakerSchema = z.object({
   fullName: z.string().min(1, "Le nom est requis."),
   profilePhoto: z.string().url().optional(),
-  bio: z.string().min(1, "La bio est requise.").optional(),
+  bio: z.string().min(1, "La bio est requise."),
   externalLinks: z.record(z.string()).optional(),
 });
 

@@ -18,23 +18,32 @@ interface Session {
 }
 
 export default function FavoritesPage() {
-  const initialFavoriteIds: string[] = (() => {
-    try {
-      const stored = localStorage.getItem("eventsync_favorites");
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  })();
-
-  const [favoriteIds, setFavoriteIds] = useState<string[]>(initialFavoriteIds);
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [sessions, setSessions]       = useState<Session[]>([]);
-  const [loading, setLoading]         = useState<boolean>(initialFavoriteIds.length > 0);
+  const [loading, setLoading]         = useState(true);
 
   useEffect(() => {
-    if (favoriteIds.length === 0) return;
+    try {
+      const stored = localStorage.getItem("eventsync_favorites");
+      if (stored) {
+        setFavoriteIds(JSON.parse(stored));
+      } else {
+        setLoading(false);
+      }
+    } catch {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (favoriteIds.length === 0) {
+      setLoading(false);
+      setSessions([]);
+      return;
+    }
 
     let isMounted = true;
+    setLoading(true);
 
     fetch("/api/sessions")
       .then((r) => r.json())
@@ -45,9 +54,7 @@ export default function FavoritesPage() {
         }
       })
       .finally(() => {
-        if (isMounted) {
-          setLoading(false);
-        }
+        if (isMounted) setLoading(false);
       });
 
     return () => {
@@ -63,7 +70,8 @@ export default function FavoritesPage() {
   }
 
   function clearAll() {
-    setFavoriteIds([]); setSessions([]);
+    setFavoriteIds([]);
+    setSessions([]);
     try { localStorage.removeItem("eventsync_favorites"); } catch {}
   }
 
