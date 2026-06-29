@@ -6,19 +6,20 @@ const ERROR_MESSAGES: Record<string, string> = {
   default: "Une erreur est survenue lors de la connexion."
 };
 
-export default function AuthErrorPage({
+export default async function AuthErrorPage({
   searchParams,
 }: {
-  searchParams: { error?: string };
+  searchParams: Promise<{ error?: string }>;
 }) {
-  const message = searchParams.error
-    ? ERROR_MESSAGES[searchParams.error] ?? searchParams.error
+  const { error } = await searchParams;
+  const message = error
+    ? ERROR_MESSAGES[error] ?? error
     : ERROR_MESSAGES.default;
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-10">
       <div className="w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-        <h1 className="text-3xl font-semibold text-slate-900">Erreur d`&aposauthentification</h1>
+        <h1 className="text-3xl font-semibold text-slate-900">Erreur d&apos;authentification</h1>
         <p className="mt-4 text-slate-700">{message}</p>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
