@@ -88,7 +88,7 @@ export const speakerUpdateSchema = z.object({
 export const speakerSchema = z.object({
   fullName: z.string().min(1, "Le nom est requis."),
   profilePhoto: z.string().url().optional(),
-  bio: z.string().min(1, "La bio est requise.").optional(),
+  bio: z.string().min(1, "La bio est requise."),
   externalLinks: z.record(z.string()).optional(),
 });
 
